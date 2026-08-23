@@ -31,6 +31,14 @@ class CodexLEDStatusTests(unittest.TestCase):
             )
         )
 
+    def test_keeps_working_color_during_compaction(self) -> None:
+        self.assertEqual(
+            codex_led_status.color_for_hook_payload(
+                {"hook_event_name": "SessionStart", "source": "compact"}
+            ),
+            (0, 102, 255),
+        )
+
     def test_maps_failed_tool_response_to_red(self) -> None:
         failure_responses = (
             {"exit_code": 1},

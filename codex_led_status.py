@@ -47,16 +47,27 @@ def color_for_hook_payload(payload: dict[str, Any]) -> z88_rgb.Color | None:
     event_name = payload.get("hook_event_name")
     if not isinstance(event_name, str):
         return None
+    if event_name == "SessionStart" and payload.get("source") == "compact":
+        return WORKING
     if event_name == "PostToolUse" and tool_failed(payload.get("tool_response")):
         return ERROR
     return EVENT_COLORS.get(event_name)
 
 
-def apply_hook_status(payload: dict[str, Any], hid_module: Any) -> bool:
+def apply_hook_status(
+    payload: dict[str, Any],
+    hid_module: Any,
+    *,
+    initialize: bool | None = None,
+) -> bool:
     color = color_for_hook_payload(payload)
     if color is None:
         return False
     with z88_rgb.Z88RGBController(hid_module) as controller:
-        initialize = payload.get("hook_event_name") not in {"PreToolUse", "PostToolUse"}
+        if initialize is None:
+            initialize = payload.get("hook_event_name") not in {
+                "PreToolUse",
+                "PostToolUse",
+            }
         controller.set_uniform(color, initialize=initialize)
     return True
