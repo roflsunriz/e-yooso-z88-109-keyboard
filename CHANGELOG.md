@@ -25,4 +25,4 @@
 ### Fixed
 
 - Report 8を非互換とする初期判定と、3回初期化後の成功結果が文書内で矛盾しないよう、プロトコル説明と更新手順を実測結果へ統一した。
-- Windows版Codexでライフサイクルイベントを受信できるよう、`commandWindows`からLEDフックへstdin JSONを明示的に転送するよう修正した。
+- Windows版Codexでライフサイクルイベントのstdin JSONが失われないよう、PowerShellラッパーを介さずLEDフックをPythonで直接起動するよう修正した。

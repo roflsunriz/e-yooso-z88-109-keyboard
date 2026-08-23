@@ -1,3 +1,7 @@
+import json
+import os
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -28,10 +32,8 @@ class HooksConfigTests(unittest.TestCase):
                 for hook in group["hooks"]:
                     self.assertEqual(hook["type"], "command")
                     self.assertIn("commandWindows", hook)
-                    self.assertIn(" -File ", hook["commandWindows"])
-                    self.assertIn(
-                        "run_codex_led_hook.ps1", hook["commandWindows"]
-                    )
+                    self.assertTrue(hook["commandWindows"].startswith("python.exe "))
+                    self.assertIn("codex_led_hook.py", hook["commandWindows"])
                     self.assertLessEqual(hook["timeout"], 3)
 
     def test_preserves_unrelated_user_hooks(self) -> None:
@@ -74,15 +76,31 @@ class HooksConfigTests(unittest.TestCase):
         config_path = Path(__file__).parents[1] / ".codex" / "hooks.json"
         self.assertFalse(config_path.exists())
 
-    def test_windows_wrapper_forwards_hook_stdin(self) -> None:
-        wrapper_path = (
-            Path(__file__).parents[1]
-            / ".codex"
-            / "hooks"
-            / "run_codex_led_hook.ps1"
-        )
+    @unittest.skipUnless(os.name == "nt", "Windows用PowerShellランナーのテスト")
+    def test_windows_command_forwards_hook_stdin(self) -> None:
+        payload = {"hook_event_name": "UserPromptSubmit", "prompt": "stdin test"}
 
-        self.assertIn("$input | & python.exe", wrapper_path.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository_root = Path(temporary_directory)
+            receiver_path = (
+                repository_root / ".codex" / "hooks" / "codex_led_hook.py"
+            )
+            receiver_path.parent.mkdir(parents=True)
+            receiver_path.write_text(
+                "import sys\nsys.stdout.write(sys.stdin.read())\n",
+                encoding="utf-8",
+            )
+            handler = install_codex_hooks.build_handler(repository_root)
+            result = subprocess.run(
+                handler["commandWindows"],
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                check=True,
+                shell=True,
+            )
+
+        self.assertEqual(json.loads(result.stdout), payload)
 
 
 if __name__ == "__main__":

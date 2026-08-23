@@ -35,10 +35,11 @@ def read_payload() -> dict[str, Any]:
 
 def main() -> int:
     try:
+        payload = read_payload()
         import hid
         from codex_led_status import apply_hook_status
 
-        apply_hook_status(read_payload(), hid)
+        apply_hook_status(payload, hid)
     except Exception as error:
         # LED連携の故障でCodex本体の処理を止めない。詳細はローカルログへ残す。
         log_error(error)

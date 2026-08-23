@@ -31,16 +31,10 @@ def build_handler(repository_root: Path) -> dict[str, Any]:
     hook_script = (
         repository_root / ".codex" / "hooks" / "codex_led_hook.py"
     ).resolve()
-    windows_wrapper = (
-        repository_root / ".codex" / "hooks" / "run_codex_led_hook.ps1"
-    ).resolve()
     return {
         "type": "command",
         "command": f'python3 "{hook_script.as_posix()}"',
-        "commandWindows": (
-            "powershell.exe -NoProfile -ExecutionPolicy Bypass "
-            f'-File "{windows_wrapper}"'
-        ),
+        "commandWindows": f'python.exe "{hook_script}"',
         "timeout": 3,
     }
 
