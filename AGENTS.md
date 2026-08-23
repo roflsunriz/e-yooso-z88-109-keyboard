@@ -47,7 +47,7 @@ VID/PIDはRedragon K617など別機種でも使われる。VID/PID一致だけ�
 
 ## Codex状態連携
 
-- `.codex/hooks.json`で公式Codex lifecycle Hooksを受ける。
+- `install_codex_hooks.py`でユーザー共通の`~/.codex/hooks.json`へ公式Codex lifecycle Hooksを登録する。
 - `.codex/hooks/codex_led_hook.py`がstdinのJSONを読み、`codex_led_status.py`で状態色へ変換する。
 - 状態色は`roflsunriz/esp32-codex-notifications`の意味に合わせる。
   - 白: セッション待機中
@@ -57,7 +57,7 @@ VID/PIDはRedragon K617など別機種でも使われる。VID/PID一致だけ�
   - 赤: ツール実行エラー
   - 消灯: セッション終了
 - 手動のHook JSON経路で青、黄、赤、緑の送信成功を確認済み。
-- プロジェクトローカルHooksは、設定追加後に新しく開いた信頼済みCodexタスクで初回実行確認が必要である。現在のタスク開始後に追加したHooksが自動再読込されると仮定しない。
+- ユーザー共通Hooksは、設定追加後に定義を確認して信頼し、新しく開いたCodexタスクで初回実行確認が必要である。現在のタスク開始後に追加したHooksが自動再読込されると仮定しない。
 - LED連携失敗時もCodex本体は継続し、`logs/codex-led-hook.log`へエラーを残す。
 
 ## ファームウェア退避の実測結果
@@ -119,7 +119,7 @@ pip-audit -r .\requirements.txt
 - `z88_rgb.py`: 126スロットRGBフレーム生成とHID送信
 - `rgb_cli.py`: 単色・レインボーCLI
 - `codex_led_status.py`: Codexイベントと色の対応
-- `.codex/hooks.json`: プロジェクトローカルCodex Hooks
+- `install_codex_hooks.py`: 全プロジェクト共通のCodex Hooks設定
 - `backup_firmware.py` / `isp_protocol.py`: 非破壊コマンド限定の退避経路
 - `probe_device.py`: 読取り専用HID列挙
 - `analyze_firmware.py`: ファーム識別・比較

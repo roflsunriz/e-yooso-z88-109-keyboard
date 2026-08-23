@@ -44,7 +44,7 @@ python .\rgb_cli.py rainbow --seconds 5 --fps 30
 
 ## Codex状態連携
 
-プロジェクトの`.codex/hooks.json`は、Codexのライフサイクルを次の色へ割り当てる。
+`install_codex_hooks.py`はユーザー共通の`~/.codex/hooks.json`へ設定を登録し、全プロジェクトのCodexライフサイクルを次の色へ割り当てる。
 
 - 白: セッション待機中
 - 青: ユーザープロンプトを受けて処理中、またはツール実行中
@@ -53,15 +53,18 @@ python .\rgb_cli.py rainbow --seconds 5 --fps 30
 - 赤: ツール実行エラー
 - 消灯: セッション終了
 
-Codexでこのプロジェクトを信頼し、Hooksの実行確認を承認する。初回利用前に`.deps`へ依存関係を導入しておく。
+初回利用前に`.deps`へ依存関係を導入し、ユーザー共通Hooksを登録する。
 
 ```powershell
 python -m pip install --target .\.deps -r .\requirements.txt
+python .\install_codex_hooks.py
 ```
+
+CodexのHooks画面で新しいユーザー共通フック定義を確認して信頼する。Codexはフック定義のハッシュ単位で信頼状態を記録するため、設定を変更した場合も再度確認して信頼する。
 
 HooksのLED連携に失敗してもCodex本体は継続し、エラーは`logs/codex-led-hook.log`へ記録される。
 
-Hooks設定を追加・変更した場合は、既存タスクで自動再読込されると仮定せず、新しく開いた信頼済みCodexタスクで青→緑の状態変化を確認する。
+Hooks設定を追加・変更した場合は、変更後のフック定義を再度信頼する。既存タスクで自動再読込されると仮定せず、任意のプロジェクトで新しく開いたCodexタスクの青→緑を確認する。ユーザー共通設定はこのリポジトリ内のスクリプトを絶対パスで参照するため、リポジトリを移動した場合はインストーラーを再実行する。
 
 ## ロールバック
 

@@ -82,7 +82,7 @@ CLIは終了時に消灯します。キーボード内蔵の発光モードへ�
 
 ## Codexとの連携
 
-プロジェクト同梱の`.codex/hooks.json`が[公式Codex lifecycle Hooks](https://learn.chatgpt.com/docs/hooks)を受け取り、[esp32-codex-notifications](https://github.com/roflsunriz/esp32-codex-notifications)と同じ状態色へ変換します。OpenAI APIキーやPC側の常駐ブリッジは不要です。
+`install_codex_hooks.py`がユーザー共通の`~/.codex/hooks.json`へ[公式Codex lifecycle Hooks](https://learn.chatgpt.com/docs/hooks)を登録し、どのプロジェクトでも[esp32-codex-notifications](https://github.com/roflsunriz/esp32-codex-notifications)と同じ状態色へ変換します。OpenAI APIキーやPC側の常駐ブリッジは不要です。
 
 | 色 | Codex状態 | 主なHook |
 | --- | --- | --- |
@@ -93,14 +93,17 @@ CLIは終了時に消灯します。キーボード内蔵の発光モードへ�
 | 赤 | ツール実行エラー | 失敗した`PostToolUse` |
 | 消灯 | セッション終了 | `SessionEnd` |
 
-プロジェクトローカルHooksは、設定追加後に新しく開いたCodexタスクで読み込まれます。
+ユーザー共通Hooksを登録するため、リポジトリ直下で次を実行します。
 
-1. Codexでこのプロジェクトを信頼します。
-2. 初回のHooks実行確認を承認します。
-3. 新しいプロンプトを送り、青→緑の状態変化を確認します。
-4. Hooksが失敗した場合は`logs/codex-led-hook.log`を確認します。
+```powershell
+python .\install_codex_hooks.py
+```
 
-現在のタスクを開いた後でHooksを追加した場合、そのタスクが設定を自動再読込すると仮定しないでください。
+1. Hooks画面で新しいユーザー共通フック定義を確認して信頼します。
+2. 任意のプロジェクトで新しいタスクを開き、プロンプト送信時の青→緑を確認します。
+3. Hooksが失敗した場合は`logs/codex-led-hook.log`を確認します。
+
+ユーザー共通設定はこのリポジトリ内のスクリプトを絶対パスで参照します。リポジトリを移動した場合はインストーラーを再実行してください。フック定義を変更すると再確認が必要です。変更後の定義を再度信頼し、新しいタスクで確認してください。現在のタスクを開いた後でHooksを追加・変更した場合、そのタスクが設定を自動再読込すると仮定しないでください。
 
 ## ファームウェアの退避と安全性
 
@@ -144,7 +147,7 @@ pip-audit -r .\requirements.txt
 - `z88_rgb.py`: RGBパケット生成とHID送信
 - `rgb_cli.py`: 単色・レインボーCLI
 - `codex_led_status.py`: Codex状態色変換
-- `.codex/hooks.json`: Codex lifecycle Hooks設定
+- `install_codex_hooks.py`: 全プロジェクト共通のCodex lifecycle Hooks設定
 - `backup_firmware.py` / `isp_protocol.py`: 破壊的命令を拒否する退避経路
 - `probe_device.py`: 読取り専用HIDプローブ
 - `analyze_firmware.py`: 8051ファーム識別・比較
