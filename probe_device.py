@@ -5,6 +5,11 @@ from __future__ import annotations
 import sys
 from typing import Any
 
+from runtime_paths import activate_local_dependencies
+
+
+activate_local_dependencies()
+
 
 VENDOR_ID = 0x258A
 PRODUCT_ID = 0x0049

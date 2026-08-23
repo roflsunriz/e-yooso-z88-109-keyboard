@@ -1,3 +1,6 @@
 COMMON-AGENTS.md
 .deps/
 __pycache__/
+firmware-dumps/
+.tools/
+logs/
