@@ -125,6 +125,8 @@ pip-audit -r .\requirements.txt
 - `analyze_firmware.py`: ファーム識別・比較
 - `docs/protocol-notes.md`: 実験履歴と根拠
 - `how-to-update.md`: 更新・検証・復旧手順
+- `build_release.py`: 再現可能な配布ZIP・SHA-256・リリースノート生成
+- `.github/workflows/release.yml`: Windows検証とタグ駆動のGitHub Release公開
 
 ## 既知の制約
 

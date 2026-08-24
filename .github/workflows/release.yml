@@ -1,0 +1,91 @@
+name: 検証とリリース
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Windows検証
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: ソースを取得
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Pythonを準備
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: 依存関係を導入
+        shell: pwsh
+        run: |
+          python -m pip install --target .\.deps -r .\requirements.txt
+          python -m pip install pip-audit==2.10.1
+
+      - name: 単体・統合テスト
+        shell: pwsh
+        run: python -m unittest discover -s .\tests -v
+
+      - name: 依存関係の脆弱性監査
+        shell: pwsh
+        run: pip-audit -r .\requirements.txt
+
+  release:
+    name: GitHub Release公開
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: verify
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: タグのソースを取得
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Pythonを準備
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: 配布ZIPとリリースノートを生成
+        shell: pwsh
+        run: |
+          $tagType = git cat-file -t $env:GITHUB_REF_NAME
+          if ($tagType -ne "tag") {
+            throw "注釈付きタグだけをリリースできます: $env:GITHUB_REF_NAME"
+          }
+          git merge-base --is-ancestor HEAD origin/main
+          if ($LASTEXITCODE -ne 0) {
+            throw "mainに含まれないコミットはリリースできません"
+          }
+          python .\build_release.py --tag $env:GITHUB_REF_NAME --output-dir .\dist
+
+      - name: GitHub Releaseを公開
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $version = $tag.Substring(1)
+          $archive = ".\dist\e-yooso-z88-109-keyboard-$tag.zip"
+          $checksum = "$archive.sha256"
+          $notes = ".\dist\release-notes-$version.md"
+          gh release create $tag $archive $checksum --verify-tag --title $tag --notes-file $notes

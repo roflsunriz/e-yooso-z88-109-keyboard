@@ -1,5 +1,18 @@
 # 更新手順
 
+## 安定版への更新
+
+[GitHub Releases](https://github.com/roflsunriz/e-yooso-z88-109-keyboard/releases)から対象バージョンのZIPと`.sha256`を同じフォルダーへダウンロードする。展開前にPowerShellでSHA-256を照合する。
+
+```powershell
+$archive = ".\e-yooso-z88-109-keyboard-v1.0.0.zip"
+$expected = ((Get-Content "$archive.sha256") -split '\s+')[0]
+$actual = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLowerInvariant()
+if ($actual -ne $expected) { throw "SHA-256が一致しません" }
+```
+
+照合後に別フォルダーへ展開し、既存の`logs/`、`.deps/`、`firmware-dumps/`を上書きしない。下記の依存関係導入と検証を行ってから、必要に応じてCodex Hooksを再登録する。
+
 ## 前提
 
 - Windows x64（実機検証: Windows 11 Pro `10.0.26200`）
@@ -71,3 +84,17 @@ Hooks設定を追加・変更した場合は、変更後のフック定義を再
 ## ロールバック
 
 コードだけを戻す場合は、直前の正常なGitコミットへ戻す。Report 8動画モードからは`Fn+M`で内蔵発光へ復帰できる。ファーム退避後にUSBデバイスが消えた場合は、ケーブルを抜き差しする。
+
+## メンテナー向けリリース手順
+
+1. `CHANGELOG.md`の`Unreleased`を`## [MAJOR.MINOR.PATCH] - YYYY-MM-DD`へ確定し、比較リンクを更新する。
+2. 本書の検証、実機RGB確認、`pip-audit -r .\requirements.txt`を完走する。
+3. `main`へ日本語Conventional Commits形式でコミットしてプッシュし、GitHub Actionsの`Windows検証`が成功するまで待つ。
+4. 同じコミットへ注釈付きタグを作成し、タグだけをプッシュする。
+
+```powershell
+git tag -a v1.0.0 -m "v1.0.0"
+git push origin v1.0.0
+```
+
+`.github/workflows/release.yml`はタグを`vMAJOR.MINOR.PATCH`として検証し、Windows上のテストと依存監査に成功した場合だけ、配布ZIP、SHA-256、`CHANGELOG.md`から抽出したリリースノートを公開する。公開済みタグは付け替えない。公開後に修正が必要な場合は次のパッチバージョンでリリースし、ワークフロー自体の一時障害だけであれば同じ実行を再実行する。

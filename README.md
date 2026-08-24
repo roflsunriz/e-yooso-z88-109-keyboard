@@ -46,6 +46,15 @@ Report 8は`08 0A 7A 01`の4バイトヘッダーと、126スロット分のR-G-
 
 ## セットアップ
 
+安定版は[GitHub Releases](https://github.com/roflsunriz/e-yooso-z88-109-keyboard/releases)から、`e-yooso-z88-109-keyboard-v1.0.0.zip`と対応する`.sha256`をダウンロードして展開します。PowerShellでは次のように改ざんや破損がないことを確認できます。
+
+```powershell
+$archive = ".\e-yooso-z88-109-keyboard-v1.0.0.zip"
+$expected = ((Get-Content "$archive.sha256") -split '\s+')[0]
+$actual = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLowerInvariant()
+if ($actual -ne $expected) { throw "SHA-256が一致しません" }
+```
+
 依存関係はリポジトリ内の`.deps`へ導入します。システムPythonへ直接追加する必要はありません。
 
 ```powershell
@@ -162,3 +171,7 @@ pip-audit -r .\requirements.txt
 - [Sinodragon](https://github.com/EvanSunde/Sinodragon)
 - [fizz-rgb](https://github.com/MrSchrodingers/fizz-rgb)
 - [旧Z88/CK104 Reddit投稿](https://www.reddit.com/r/MechanicalKeyboards/comments/7sghkk/eelement_z88_104_keys_lighting_and_macro_editor/)
+
+## ライセンス
+
+このプロジェクトは[MIT License](LICENSE)で提供します。
