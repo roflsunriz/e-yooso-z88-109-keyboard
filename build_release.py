@@ -7,7 +7,7 @@ import hashlib
 import re
 import subprocess
 import zipfile
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -111,13 +111,39 @@ def git_output(repository_root: Path, *arguments: str) -> bytes:
     return result.stdout
 
 
-def tracked_files(repository_root: Path) -> list[str]:
-    output = git_output(repository_root, "ls-files", "-z")
+def tracked_files(repository_root: Path, reference: str) -> list[str]:
+    output = git_output(
+        repository_root,
+        "ls-tree",
+        "-r",
+        "--name-only",
+        "-z",
+        reference,
+    )
     return [path for path in output.decode("utf-8").split("\0") if path]
 
 
-def commit_timestamp(repository_root: Path) -> int:
-    return int(git_output(repository_root, "log", "-1", "--format=%ct").strip())
+def commit_timestamp(repository_root: Path, reference: str) -> int:
+    return int(
+        git_output(
+            repository_root,
+            "log",
+            "-1",
+            "--format=%ct",
+            reference,
+        ).strip()
+    )
+
+
+def release_contents(
+    repository_root: Path,
+    reference: str,
+    release_paths: Sequence[str],
+) -> dict[str, bytes]:
+    return {
+        path: git_output(repository_root, "show", f"{reference}:{path}")
+        for path in release_paths
+    }
 
 
 def zip_timestamp(timestamp: int) -> tuple[int, int, int, int, int, int]:
@@ -128,9 +154,8 @@ def zip_timestamp(timestamp: int) -> tuple[int, int, int, int, int, int]:
 
 
 def write_release_archive(
-    repository_root: Path,
     archive_path: Path,
-    release_paths: Sequence[str],
+    contents: Mapping[str, bytes],
     archive_root: str,
     timestamp: int,
 ) -> None:
@@ -144,12 +169,7 @@ def write_release_archive(
             compression=zipfile.ZIP_DEFLATED,
             compresslevel=9,
         ) as archive:
-            for relative_path in release_paths:
-                source_path = repository_root / Path(relative_path)
-                if not source_path.is_file():
-                    raise FileNotFoundError(
-                        f"リリース対象ファイルが見つかりません: {relative_path}"
-                    )
+            for relative_path, content in contents.items():
                 member = zipfile.ZipInfo(
                     f"{archive_root}/{relative_path}",
                     date_time=date_time,
@@ -157,7 +177,7 @@ def write_release_archive(
                 member.compress_type = zipfile.ZIP_DEFLATED
                 member.create_system = 3
                 member.external_attr = 0o100644 << 16
-                archive.writestr(member, source_path.read_bytes())
+                archive.writestr(member, content)
         temporary_path.replace(archive_path)
     finally:
         temporary_path.unlink(missing_ok=True)
@@ -171,14 +191,21 @@ def write_checksum(archive_path: Path, checksum_path: Path) -> None:
     )
 
 
-def build_release(repository_root: Path, output_directory: Path, tag: str) -> None:
+def build_release(
+    repository_root: Path,
+    output_directory: Path,
+    tag: str,
+    reference: str,
+) -> None:
     version = version_from_tag(tag)
-    changelog_path = repository_root / "CHANGELOG.md"
     notes = extract_release_notes(
-        changelog_path.read_text(encoding="utf-8"),
+        git_output(repository_root, "show", f"{reference}:CHANGELOG.md").decode(
+            "utf-8"
+        ),
         version,
     )
-    release_paths = select_release_files(tracked_files(repository_root))
+    release_paths = select_release_files(tracked_files(repository_root, reference))
+    contents = release_contents(repository_root, reference, release_paths)
     output_directory.mkdir(parents=True, exist_ok=True)
 
     archive_root = f"{PROJECT_NAME}-{tag}"
@@ -187,11 +214,10 @@ def build_release(repository_root: Path, output_directory: Path, tag: str) -> No
     notes_path = output_directory / f"release-notes-{version}.md"
 
     write_release_archive(
-        repository_root,
         archive_path,
-        release_paths,
+        contents,
         archive_root,
-        commit_timestamp(repository_root),
+        commit_timestamp(repository_root, reference),
     )
     write_checksum(archive_path, checksum_path)
     notes_path.write_text(notes, encoding="utf-8")
@@ -205,6 +231,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tag", required=True, help="vMAJOR.MINOR.PATCH形式のタグ")
     parser.add_argument(
+        "--ref",
+        default="HEAD",
+        help="成果物へ格納するGit参照（既定値: HEAD）",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("dist"),
@@ -215,7 +246,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    build_release(Path(__file__).resolve().parent, args.output_dir.resolve(), args.tag)
+    build_release(
+        Path(__file__).resolve().parent,
+        args.output_dir.resolve(),
+        args.tag,
+        args.ref,
+    )
     return 0
 
 

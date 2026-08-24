@@ -36,7 +36,9 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --target .\.deps -r .\requirements.txt
+          if ($LASTEXITCODE -ne 0) { throw "実行依存関係の導入に失敗しました" }
           python -m pip install pip-audit==2.10.1
+          if ($LASTEXITCODE -ne 0) { throw "pip-auditの導入に失敗しました" }
 
       - name: 単体・統合テスト
         shell: pwsh
@@ -76,7 +78,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "mainに含まれないコミットはリリースできません"
           }
-          python .\build_release.py --tag $env:GITHUB_REF_NAME --output-dir .\dist
+          python .\build_release.py --tag $env:GITHUB_REF_NAME --ref $env:GITHUB_REF_NAME --output-dir .\dist
 
       - name: GitHub Releaseを公開
         shell: pwsh
@@ -88,4 +90,13 @@ jobs:
           $archive = ".\dist\e-yooso-z88-109-keyboard-$tag.zip"
           $checksum = "$archive.sha256"
           $notes = ".\dist\release-notes-$version.md"
-          gh release create $tag $archive $checksum --verify-tag --title $tag --notes-file $notes
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $archive $checksum --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Release資産の更新に失敗しました" }
+            gh release edit $tag --title $tag --notes-file $notes
+            if ($LASTEXITCODE -ne 0) { throw "Releaseノートの更新に失敗しました" }
+          } else {
+            gh release create $tag $archive $checksum --verify-tag --title $tag --notes-file $notes
+            if ($LASTEXITCODE -ne 0) { throw "GitHub Releaseの作成に失敗しました" }
+          }

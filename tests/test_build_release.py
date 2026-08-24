@@ -1,4 +1,5 @@
 import hashlib
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -68,12 +69,12 @@ class ReleaseArchiveTests(unittest.TestCase):
             first = root / "first.zip"
             second = root / "second.zip"
             paths = ["README.md", "app.py"]
+            contents = {path: (root / path).read_bytes() for path in paths}
 
             for archive_path in (first, second):
                 build_release.write_release_archive(
-                    root,
                     archive_path,
-                    paths,
+                    contents,
                     "project-v1.0.0",
                     timestamp=1_700_000_000,
                 )
@@ -95,6 +96,42 @@ class ReleaseArchiveTests(unittest.TestCase):
                 checksum.read_text(encoding="ascii"),
                 f"{expected}  first.zip\n",
             )
+
+    def test_reads_committed_blobs_instead_of_converted_worktree_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(
+                ["git", "config", "user.name", "Release Test"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "release@example.invalid"],
+                cwd=root,
+                check=True,
+            )
+            source = root / "source.txt"
+            source.write_bytes(b"line one\nline two\n")
+            subprocess.run(
+                ["git", "-c", "core.autocrlf=false", "add", "source.txt"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "-q", "-m", "test"],
+                cwd=root,
+                check=True,
+            )
+            source.write_bytes(b"line one\r\nline two\r\n")
+
+            contents = build_release.release_contents(
+                root,
+                "HEAD",
+                ["source.txt"],
+            )
+
+            self.assertEqual(contents["source.txt"], b"line one\nline two\n")
 
 
 if __name__ == "__main__":

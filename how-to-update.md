@@ -97,4 +97,4 @@ git tag -a v1.0.0 -m "v1.0.0"
 git push origin v1.0.0
 ```
 
-`.github/workflows/release.yml`はタグを`vMAJOR.MINOR.PATCH`として検証し、Windows上のテストと依存監査に成功した場合だけ、配布ZIP、SHA-256、`CHANGELOG.md`から抽出したリリースノートを公開する。公開済みタグは付け替えない。公開後に修正が必要な場合は次のパッチバージョンでリリースし、ワークフロー自体の一時障害だけであれば同じ実行を再実行する。
+`.github/workflows/release.yml`はタグを`vMAJOR.MINOR.PATCH`として検証し、Windows上のテストと依存監査に成功した場合だけ、指定Git参照のblobから再現可能な配布ZIP、SHA-256、`CHANGELOG.md`由来のリリースノートを公開する。公開済みタグは付け替えない。公開後にコード修正が必要な場合は次のパッチバージョンでリリースし、ワークフロー自体の一時障害だけであれば同じ実行を再実行する。
