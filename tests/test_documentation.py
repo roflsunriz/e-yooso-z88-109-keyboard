@@ -6,8 +6,8 @@ REPOSITORY_ROOT = Path(__file__).parents[1]
 
 
 class DocumentationTests(unittest.TestCase):
-    def test_agents_and_readme_include_verified_hardware_facts(self) -> None:
-        for filename in ("AGENTS.md", "README.md"):
+    def test_findings_include_verified_hardware_facts(self) -> None:
+        for filename in ("findings.md",):
             text = (REPOSITORY_ROOT / filename).read_text(encoding="utf-8")
             with self.subTest(filename=filename):
                 self.assertIn("Z88", text)
@@ -19,11 +19,17 @@ class DocumentationTests(unittest.TestCase):
                 self.assertIn("3回", text)
                 self.assertIn("Fn+M", text)
 
+    def test_agent_and_user_entrypoints_link_to_findings(self) -> None:
+        for filename in ("AGENTS.md", "README.md"):
+            text = (REPOSITORY_ROOT / filename).read_text(encoding="utf-8")
+            with self.subTest(filename=filename):
+                self.assertIn("[findings.md](findings.md", text)
+
     def test_firmware_hash_is_consistent(self) -> None:
         expected_hash = (
             "0de319edb11a4a532bf27cc263a6491b4a98e666a627b0df6cd51a547f9fabe8"
         )
-        for filename in ("AGENTS.md", "README.md", "docs/protocol-notes.md"):
+        for filename in ("findings.md", "README.md", "docs/protocol-notes.md"):
             text = (REPOSITORY_ROOT / filename).read_text(encoding="utf-8")
             with self.subTest(filename=filename):
                 self.assertIn(expected_hash, text)
@@ -47,6 +53,7 @@ class DocumentationTests(unittest.TestCase):
             (REPOSITORY_ROOT / filename).read_text(encoding="utf-8")
             for filename in (
                 "AGENTS.md",
+                "findings.md",
                 "README.md",
                 "CHANGELOG.md",
                 "how-to-update.md",

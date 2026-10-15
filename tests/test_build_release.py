@@ -54,6 +54,7 @@ class ReleaseMetadataTests(unittest.TestCase):
 
         self.assertIn("build_release.py", selected)
         self.assertIn("LICENSE", selected)
+        self.assertIn("findings.md", selected)
         self.assertIn("docs/protocol-notes.md", selected)
         self.assertNotIn(".github/workflows/release.yml", selected)
         self.assertNotIn("AGENTS.md", selected)

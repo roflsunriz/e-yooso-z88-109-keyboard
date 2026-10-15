@@ -22,6 +22,7 @@ RELEASE_HEADER_PATTERN = re.compile(
 )
 LINK_DEFINITION_PATTERN = re.compile(r"^\[[^\]]+\]:\s", re.MULTILINE)
 RELEASE_METADATA = {
+    "findings.md",
     "CHANGELOG.md",
     "README.md",
     "how-to-update.md",

@@ -230,3 +230,7 @@ Dependabot は対象の依存関係を毎週確認します。patch／minor 更�
 - [README.md](README.md): 利用者向けの導入と操作。
 - [verification.md](verification.md): 検証手順、実測結果、未確認事項。
 - [how-to-update.md](how-to-update.md): 更新・復旧の実手順。
+
+## 文書配置を検査するテストと配布経路
+
+`tests/test_documentation.py` は機器の識別値・RGB初期化条件・復帰操作とfirmware hashを正本 `findings.md` で検査し、AGENTSとREADMEから正本へ到達できることを別に確認する。配置変更時は期待する機器情報やhashを緩めず、読み取り先と参照を合わせる。READMEから分離した情報が配布ZIPでも読めるよう、`build_release.py` の `RELEASE_METADATA` に `findings.md` を含める。`tests/test_build_release.py` が同梱対象と再現可能なZIP生成を検証する。
