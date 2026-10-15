@@ -5,3 +5,6 @@ firmware-dumps/
 .tools/
 logs/
 dist/
+
+# エージェントの一時作業メモ
+subagents/

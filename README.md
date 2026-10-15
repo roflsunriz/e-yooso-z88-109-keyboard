@@ -21,28 +21,7 @@ E-YOOSO（e元素）Z88 109キー日本語配列キーボードを、ファー�
 
 ## 実機検証結果
 
-Windows 11 Pro x64環境で、次を確認しました。
-
-| 検証項目 | 結果 |
-| --- | --- |
-| 初期化なしの単発Report 8 | HID送信は成功するが実機は消灯のみ |
-| ゼロ色Report 8を16ms間隔で3回送信 | 動画モード初期化に成功 |
-| 全キー赤→緑→青→消灯 | 実機目視で成功 |
-| 単色CLI | 成功 |
-| 30FPSレインボー、5秒、150フレーム | 全フレーム送信完走 |
-| `Fn+M`による内蔵発光への復帰 | 成功 |
-| 61,440バイトのファーム退避 | 成功、書込み・消去命令は未使用 |
-| Codex Hook JSONの青・黄・赤・緑変換 | 手動のend-to-end経路で送信成功 |
-
-Report 8は`08 0A 7A 01`の4バイトヘッダーと、126スロット分のR-G-B各3バイトで構成します。動画モードの3回初期化を省略すると、送信バイト数が正しくても発色しません。
-
-### 検証環境
-
-- Microsoft Windows 11 Pro x64 `10.0.26200`
-- Python `3.14.6`
-- hidapi `0.15.0`
-- Codex Desktop `26.818.5229.0`
-- Rizin `0.9.1`（8051ファームの静的解析に使用）
+この内容は [findings.md](findings.md#readme-1) にまとめています。
 
 ## セットアップ
 
@@ -145,26 +124,11 @@ python .\backup_firmware.py --read-firmware
 
 ## 開発と検証
 
-```powershell
-python -m unittest discover -s .\tests -v
-python .\probe_device.py
-python .\backup_firmware.py
-python .\direct_rgb_probe.py
-pip-audit -r .\requirements.txt
-```
-
-実験履歴とプロトコル根拠は[プロトコル調査記録](docs/protocol-notes.md)、更新・復旧手順は[更新手順](how-to-update.md)を参照してください。
+この内容は [findings.md](findings.md#readme-2) にまとめています。
 
 ## 主要ファイル
 
-- `z88_rgb.py`: RGBパケット生成とHID送信
-- `rgb_cli.py`: 単色・レインボーCLI
-- `codex_led_status.py`: Codex状態色変換
-- `install_codex_hooks.py`: 全プロジェクト共通のCodex lifecycle Hooks設定
-- `backup_firmware.py` / `isp_protocol.py`: 破壊的命令を拒否する退避経路
-- `probe_device.py`: 読取り専用HIDプローブ
-- `analyze_firmware.py`: 8051ファーム識別・比較
-- `docs/protocol-notes.md`: 実測履歴
+この内容は [findings.md](findings.md#readme-3) にまとめています。
 
 ## 参考資料
 
@@ -180,4 +144,8 @@ pip-audit -r .\requirements.txt
 
 ## 依存更新の自動処理
 
-Dependabot は対象の依存関係を毎週確認します。patch／minor 更新は PR のチェック（検証とリリース）が成功した後に自動で squash merge されます。CI の失敗ジョブは 1 回だけ再実行します。再失敗した PR は残して手動で修正します。major 更新は手動で確認します。
+この内容は [findings.md](findings.md#readme-4) にまとめています。
+
+## 開発時の参照先
+
+プロジェクト固有の構成・環境・調査知見は [findings.md](findings.md)、作業規範は [AGENTS.md](AGENTS.md)、検証記録は [verification.md](verification.md) を参照してください。
