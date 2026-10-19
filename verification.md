@@ -34,3 +34,8 @@
 
 - 旧配置のAGENTS/READMEへ機器事実を要求した今回CIは3件のassertionに失敗した。機器情報・初期化条件・復帰操作・firmware hashの期待値は変えず、正本findings.mdの検査と入口リンクの検査へ更新した。ローカルの既存単体・統合テスト47件がすべて成功。findingsをZIP同梱対象へ追加し、既存コミットを使う作業用ZIP生成でも同梱を確認した。実機操作・公開リリースは行っていない。
 - 追加差分も本文・参照・`git diff --check` を確認し、依存定義の変更や新たな外部監査送信は行っていない。
+
+## 2026-10-20: Dependabot 月末一括処理
+
+- `.github/dependabot.yml` は毎月28日00:00、`.github/workflows/dependabot-automation.yml` は同日18:00（いずれも `Asia/Tokyo`）に設定した。呼び出し先は検証済み共通 workflow の固定 SHA とし、現在の head SHA、Dependabot の資格状態、全 PR チェック成功を merge 前に再確認する。
+- YAML 構文、変更差分、空白エラーをローカルで検査した。実際の月末 schedule と Dependabot PR の merge 経路は、次回の毎月28日実行で確認する。

@@ -8,6 +8,8 @@
 
 ### Changed
 
+- GitHub Actions の月間利用時間を抑えるため、Dependabot version update と自動マージを毎週・即時処理から毎月28日（Asia/Tokyo）の月末一括処理へ変更した。
+
 - ブランチとPull Requestの古い検証は新しい実行で取り消し、タグのリリース実行は途中で取り消さないようconcurrencyを分けた。
 
 - 文書の正本を分離した後も機器情報・firmware hashと配布物の検査を維持できるよう、文書テストの参照先を `findings.md` へ更新し、配布ZIPへの同梱対象に追加した。
