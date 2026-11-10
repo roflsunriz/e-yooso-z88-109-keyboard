@@ -183,3 +183,7 @@ pip-audit -r .\requirements.txt
 更新PRの取り込みは、必要なCIチェックにすべて成功したものだけを対象に、毎月28日18:00（Asia/Tokyo）の月末処理で行います。
 
 Dependabot は対象の依存関係を毎月28日00:00（Asia/Tokyo）に確認します。patch／minor 更新は PR のチェック（検証とリリース）が成功した後に自動で squash merge されます。CI の失敗ジョブは 1 回だけ再実行します。再失敗した PR は残して手動で修正します。major 更新も互換性を確認し、同じ月末処理で取り込みます。
+
+## 調査知見
+
+実装・検証で確認した機器固有の制約と注意点は [findings.md](findings.md) を参照してください。
